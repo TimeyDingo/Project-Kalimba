@@ -1,0 +1,8 @@
+1. Select all files in root of project file and zip files
+2. rename from .zip to .love
+3. move love file into the portable file of love installation
+4. open cmd at root of portable love installation
+5. run command
+copy /b [drag and drop the location of the love.exe from the portable installation into the cmd] + [drag and drop the location of the zipped project files into the cmd] [name of desired output file].exe
+6. move file to the portable installation of love2d
+7. move settings.txt and savedsets folder over to the portable installation of love2d
