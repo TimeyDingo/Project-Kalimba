@@ -1,4 +1,4 @@
-This software is intended as an offline replacement for flashcard apps such as quizlet while allowing you intercompatibility to import your quizlet flashcards
+This software is intended to be a learning application for the Kalimba instrument.
 
 **Currently windows only!!! MAC and linux builds coming soon**
 
@@ -16,4 +16,4 @@ This software is intended as an offline replacement for flashcard apps such as q
 3. enjoy
 
 
-Current Version: 0.0.10
+Current Version: 0.0.01

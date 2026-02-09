@@ -1,46 +1,24 @@
 require "math"--default lua math
 require "TextFuncs"--adds custom functions
-require "MainMenu"--Menu Functions
 require "IOFuncs"
 require "CoreChanges"
 require "Loading"
-require "Activities.EditActivity"
-require "Activities.FlashcardsActivity"
-require "Activities.MatchingActivity"
-require "Activities.MissileDefenseActivity"
-require "Activities.TestActivity"
-require "Activities.WordSearchActivity"
-require "Activities.ViewSet"
 require "95Styling"
 require "backdrops"
 utf8 = require("utf8")
 https = require("https")
---[[
-https://www.youtube.com/watch?v=py0iF3mwy2E
--show correct answers after finishing test mode
-]]
 function love.load()
     LoadSettings()
     LoadFonts()
-    LoadActivities()
     LoadMouseClickDebounce()
     LoadPopup()
-    LoadSounds()
     StateMachine="Main Menu"
-    Input=""
-    Paste=""
-    SetData={}
-    SetToPreview=0
     BackspaceTimer=0
     MainMenuScroll=0
-    Deleting=false
-    HeldTime=0
-    NumberOfTerms=0
-    YScroll=0
     MouseHistory = {}
     MouseHistory.maxEntries = 10
     love.keyboard.setTextInput(true)
-    CheckForUpdates("0.0.10")
+    CheckForUpdates("0.0.01")
 end
 function love.update(dt)
     dt = love.timer.getDelta()
@@ -54,18 +32,7 @@ function love.update(dt)
         PopupAction="love.event.quit()"
         PopUpMessage="Close Software?"
     end
-    if StateMachine=="Edit" and EditActivityLoadOnce==false then
-        SetTitle, SetData, NumberOfTerms=LoadIndividualSet(SetToPreview)
-        EditActivityLoadOnce=true
-    end
     StateMachine=tostring(StateMachine)
-    if StateMachine=="Missile Defense" then
-        MissileDefenseTimer = MissileDefenseTimer + dt
-    end
-    if StateMachine=="Set Options" and NumberOfTerms>4 then --?? Load for the testing/matching activity
-        GenerateTestingData()
-        GenerateMatchingData()
-    end
     function love.wheelmoved(x, y)
         YScroll=y
     end
@@ -78,20 +45,11 @@ function love.draw()
     MouseDX, MouseDY=MouseDelta()
     if PopupCall==false then
         if StateMachine=="Main Menu" then
-            TextEntry={} -- clear text entry table each time the main menu is reached
-            TextEntryWriter=0 -- clear text entry writer positon
-            EditCursorPosition=0 -- clear edit position
-            
             --N5Window(244, 79, 1431, 922, true, "Project Copernicus", true,{{"StateMachine='Settings Menu'","~"},{"PopupCall=true; PopupAction='love.event.quit()';PopUpMessage='Close Software?'","X"}})
             N5MainMenu()
             N5Button(261, 833, 689, 41, true, 'if SetToPreview>0 then StateMachine="Set Options" end' , true ,BodyFont,"Select")
             N5Button(261, 889, 689, 41, true, "CreateNewSet()" , true ,BodyFont, "Create New Set")
             N5Button(261, 944, 689, 41, true, 'StateMachine="Import Menu"' , true ,BodyFont, "Import Quizlet Set")
-            if Deleting==false then
-                SetData = LoadSavedSetsIntoMemory()
-                ListofSets()
-                SetPreview()
-            end
             N5Button(1542,93,55,55,true,"StateMachine='Settings Menu'",true,SmallHeaderBold,"~")
             N5Button(1604,93,55,55,true,"PopupCall=true; PopupAction='love.event.quit()';PopUpMessage='Close Software?'",true,SmallHeaderBold,"X")
         end
@@ -142,88 +100,8 @@ function love.draw()
             SAHL24=love.graphics.newFont("Fonts/AtkinsonHyperlegible-Regular.ttf", scaling(24,1080,Settings.YRes)+FontTransform())
             SOD24=love.graphics.newFont("Fonts/OpenDyslexic-Regular.otf", scaling(24,1080,Settings.YRes,true)+FontTransform())
             --
-            --Audio
-            local AVTX,AVTY,AVTW,AVTH=N5BoxWithTitle(744,308,411,79,true,"Audio Volume","",true)
-            Settings.AudioRaw,Settings.AudioPercent=N5Slider(AVTX,AVTY,AVTW,AVTH, false, Settings.AudioRaw,Settings.AudioPercent)
-            local Selected = isMouseOverBox(AVTX, AVTY, AVTW, AVTH)
-            if Selected and math.abs(MouseDY)>0.5 then
-                Sounds.MissileIncoming:play()
-            end
-            SetSoundVolume(Settings.AudioPercent)
-            --
             N5Button(1542,93,55,55,true,"StateMachine='Main Menu';love.load()",true,SmallHeaderBold,"<-")
             N5Button(1604,93,55,55,true,"PopupCall=true; PopupAction='love.event.quit()';PopUpMessage='Close Software?'",true,SmallHeaderBold,"X")
-        end
-        if StateMachine=="Import Menu" then
-            N5ImportMenu()
-            ImportMenuTitle()
-            ImportMenuSetPastingAndPreview()
-            N5Button(1749,93,55,55,true,'StateMachine = "Main Menu"; Paste = ""; Input = ""',true,SmallHeaderBold,"<-")
-            N5Button(1810,93,55,55,true,"PopupCall=true; PopupAction='love.event.quit()';PopUpMessage='Close Software?'",true,SmallHeaderBold,"X")
-            N5Button(1020, 887, 290, 96, true, 'StateMachine = "Main Menu"; ImportAQuizletSet(Input,Paste); Paste = ""; Input = ""' , true ,BodyFontBold,"Confirm")
-        end
-        if StateMachine=="Set Options" then
-            SetTitle, SetData, NumberOfTerms = LoadIndividualSet(SetToPreview)
-            N5SelectMenu()
-            N5Button(300, 253, 402, 122, true, 'StateMachine = "View Set"', false,BodyFontBold,"View/Edit")
-            N5Button(754, 253, 402, 122, true, 'StateMachine = "Flashcards"', false,BodyFontBold,"Flashcards")
-            N5Button(754, 486, 402, 122, true, 'StateMachine = "Missile Defense"; LoadMissileDefense()', false,BodyFontBold,"Missile Defense")
-            --ButtonStyle1Mod3(754,486,402,122,"Word Search",Exo24Bold,true, 'StateMachine = "Word Search"')
-            if NumberOfTerms>4 then 
-                N5Button(1209, 486, 402, 122, true, 'StateMachine = "Test"', false,BodyFontBold, "Test")
-                N5Button(1209, 253, 402, 122, true, 'StateMachine = "Matching"; LoadMatching()', false,BodyFontBold,"Matching")
-            else
-                N5Button(1209, 486, 402, 122, true, "", false,BodyFontBold, "Not Enough Terms")
-                N5Button(1209, 253, 402, 122, true, "", false,BodyFontBold, "Not Enough Terms")
-            end
-            --ButtonStyle1(300,720,402,122,"Reserved",Exo24Bold,true)
-            --ButtonStyle1(754,720,402,122,"Reserved",Exo24Bold,true)
-            --ButtonStyle1(1209,720,402,122,"Reserved",Exo24Bold,true)
-            N5Button(1542,93,55,55,true,"StateMachine='Main Menu'",true,SmallHeaderBold,"<-")
-            N5Button(1604,93,55,55,true,"PopupCall=true; PopupAction='love.event.quit()';PopUpMessage='Close Software?'",true,SmallHeaderBold,"X")
-        end
-        if StateMachine=="Edit" then
-            N5GameBar("Edit")
-            N5Button(1751, 6, 75, 75, true, "EditActivityCallBackoutPopup()",true,SmallHeaderBold,"<-")
-            N5Button(1835, 6, 75, 75, true, "PopupCall=true; PopupAction='love.event.quit()';PopUpMessage='Close Software?'",true,SmallHeaderBold,"X")
-            EditActivity()
-        end
-        if StateMachine=="Flashcards" then
-            N5GameBar("Flashcards")
-            N5Button(1751, 6, 75, 75, true, 'StateMachine = "Set Options"; LoadFlashcards()',true,SmallHeaderBold,"<-")
-            N5Button(1835, 6, 75, 75, true, "PopupCall=true; PopupAction='love.event.quit()';PopUpMessage='Close Software?'",true,SmallHeaderBold,"X")
-            FlashcardActivity()
-        end
-        if StateMachine=="Matching" then
-            N5GameBar("Matching")
-            N5Button(1751, 6, 75, 75, true, 'StateMachine = "Set Options"; LoadMatching()',true,SmallHeaderBold,"<-")
-            N5Button(1835, 6, 75, 75, true, "PopupCall=true; PopupAction='love.event.quit()';PopUpMessage='Close Software?'",true,SmallHeaderBold,"X")
-            MatchingActivity()
-        end
-        if StateMachine=="Missile Defense" then
-            N5GameBar("Missile Defense")
-            N5Button(1642, 6, 100, 75, true, 'SetSoundVolume(0)',true,SmallHeaderBold,"Mute")
-            N5Button(1751, 6, 75, 75, true, 'StateMachine = "Set Options"',true,SmallHeaderBold,"<-")
-            N5Button(1835, 6, 75, 75, true, "PopupCall=true; PopupAction='love.event.quit()';PopUpMessage='Close Software?'",true,SmallHeaderBold,"X")
-            MissileDefenseActivity()
-        end
-        if StateMachine=="Word Search" then
-            N5GameBar("Word Search")
-            N5Button(1751, 6, 75, 75, true, 'StateMachine = "Set Options"',true,SmallHeaderBold,"<-")
-            N5Button(1835, 6, 75, 75, true, "PopupCall=true; PopupAction='love.event.quit()';PopUpMessage='Close Software?'",true,SmallHeaderBold,"X")
-            WordSearchActivity()
-        end
-        if StateMachine=="Test" then
-            N5GameBar("Test")
-            N5Button(1751, 6, 75, 75, true, 'StateMachine = "Set Options"; LoadTestActivity()',true,SmallHeaderBold,"<-")
-            N5Button(1835, 6, 75, 75, true, "PopupCall=true; PopupAction='love.event.quit()';PopUpMessage='Close Software?'",true,SmallHeaderBold,"X")
-            TestActivity()
-        end
-        if StateMachine=="View Set" then
-            N5GameBar("View Set")
-            N5Button(1751, 6, 75, 75, true, 'StateMachine = "Set Options"; LoadViewSet()',true,SmallHeaderBold,"<-")
-            N5Button(1835, 6, 75, 75, true, "PopupCall=true; PopupAction='love.event.quit()';PopUpMessage='Close Software?'",true,SmallHeaderBold,"X")
-            ViewActivity()
         end
     end
     --love.graphics.print(MouseX.."x"..MouseY,scaling(200,1920,Settings.XRes),scaling(50,1080,Settings.YRes))--? Debug for mouse position
