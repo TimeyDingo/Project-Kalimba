@@ -5,7 +5,7 @@ function N5MainMenu()
     love.graphics.setColor(0,0,170)
     love.graphics.rectangle("fill",scaling(253,1920,Settings.XRes),scaling(89,1080,Settings.YRes),scaling(1414,1920,Settings.XRes),scaling(63,1080,Settings.YRes))
     love.graphics.setColor(244,244,244)
-    CenteredTextBox(scaling(270,1920,Settings.XRes),scaling(89,1080,Settings.YRes),scaling(1414,1920,Settings.XRes),scaling(63,1080,Settings.YRes),"Magellan Offline Study System",SmallHeaderBold,false,"left")
+    CenteredTextBox(scaling(270,1920,Settings.XRes),scaling(89,1080,Settings.YRes),scaling(1414,1920,Settings.XRes),scaling(63,1080,Settings.YRes),"Project Kalimba",SmallHeaderBold,false,"left")
 end
 function N5SelectMenu()
     love.graphics.setColor(56,110,110)

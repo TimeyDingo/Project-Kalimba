@@ -127,16 +127,15 @@ function ApplySettings(NewX,NewY)
         love.timer.sleep(0.5)
         love.mouse.setPosition(0,0)
     end
-    LoadActivities()
     LoadMouseClickDebounce()
     LoadPopup()
-    love.window.setMode(Settings.XRes,Settings.YRes)
+    love.window.setMode(Settings.XRes,Settings.YRes,{msaa=Settings.MSAA, fullscreen=toboolean(Settings.Fullscreen), borderless=toboolean(Settings.Fullscreen), usedpiscale=false})
     if Settings.ReducedFlicker then
         love.timer.sleep(0.5)
         love.mouse.setPosition(0,0)
     end
     Settings.FontModRaw=scaling(Settings.FontModRaw,PrevX,Settings.XRes)
-    Settings.AudioRaw=scaling(Settings.AudioRaw,PrevX,Settings.XRes)
+    Settings.NoteSpeedRaw=scaling(Settings.NoteSpeedRaw,PrevX,Settings.XRes)
 end
 function FontTransform()
     -- Convert percent into a signed scaling factor

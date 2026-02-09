@@ -5,6 +5,7 @@ require "CoreChanges"
 require "Loading"
 require "95Styling"
 require "backdrops"
+require "Music"
 utf8 = require("utf8")
 https = require("https")
 function love.load()
@@ -14,6 +15,9 @@ function love.load()
     LoadPopup()
     StateMachine="Main Menu"
     BackspaceTimer=0
+    NoteTimer=0
+    NoteInterval=3
+    DisplayedNote=0
     MainMenuScroll=0
     MouseHistory = {}
     MouseHistory.maxEntries = 10
@@ -24,6 +28,7 @@ function love.update(dt)
     dt = love.timer.getDelta()
     UpdateDebounceTimers()
     DebounceTimer=DebounceTimer+dt
+    NoteTimer=NoteTimer+dt
     if love.keyboard.isDown("lshift") and love.keyboard.isDown("escape") then --? allows game to be closed quickly for debugging
         love.event.quit()
     end
@@ -47,11 +52,40 @@ function love.draw()
         if StateMachine=="Main Menu" then
             --N5Window(244, 79, 1431, 922, true, "Project Copernicus", true,{{"StateMachine='Settings Menu'","~"},{"PopupCall=true; PopupAction='love.event.quit()';PopUpMessage='Close Software?'","X"}})
             N5MainMenu()
-            N5Button(261, 833, 689, 41, true, 'if SetToPreview>0 then StateMachine="Set Options" end' , true ,BodyFont,"Select")
-            N5Button(261, 889, 689, 41, true, "CreateNewSet()" , true ,BodyFont, "Create New Set")
-            N5Button(261, 944, 689, 41, true, 'StateMachine="Import Menu"' , true ,BodyFont, "Import Quizlet Set")
             N5Button(1542,93,55,55,true,"StateMachine='Settings Menu'",true,SmallHeaderBold,"~")
             N5Button(1604,93,55,55,true,"PopupCall=true; PopupAction='love.event.quit()';PopUpMessage='Close Software?'",true,SmallHeaderBold,"X")
+            local RandomNote = love.math.random(-5, 11)
+            if NoteTimer>Settings.NoteSpeedPercent*5 then
+                NoteTimer=0
+                DisplayedNote=RandomNote
+            end
+            print(Settings.NoteSpeedPercent*5)
+            --[[
+                E6 = -5
+                D6 = -4
+                C6 = -3
+                B5 = -2
+                A5 = -1 
+                G5 = 0
+                F5 = 1
+                E5 = 2
+                D5 = 3
+                C5 = 4
+                B4 = 5
+                A4 = 6
+                G4 = 7
+                F4 = 8
+                E4 = 9
+                D4 = 10
+                C4 = 11
+            ]]
+            NoteConversionTable={"E6","D6","C6","B5","A5","G5","F5","E5","D5","C5","B4","A4","G4","F4","E4","D4","C4"}
+            MeasureDisplay(0, 0, scaling(500,1440,Settings.XRes), scaling(50,810,Settings.YRes))
+            DrawQuarterNote(0, 0, scaling(500,1440,Settings.XRes), scaling(50,810,Settings.YRes), DisplayedNote, 0.5)
+            CenterText(scaling(-300,1440,Settings.XRes),0,NoteConversionTable[DisplayedNote+6],MediumHeaderBold)
+            if Settings.TimerBox then
+                TimerDisplay(1300,400,275,true)
+            end
         end
 
         
@@ -85,9 +119,17 @@ function love.draw()
             N5Button(FSBX+Padding,FSBY+Padding+YSpacing*2,FSBW-Padding*2,BoxHeight, false, "Settings.FontSelected='IBMPlex'", true, SIBM24, "IBMPlex")
             N5Button(FSBX+Padding,FSBY+Padding+YSpacing*3,FSBW-Padding*2,BoxHeight, false, "Settings.FontSelected='Stylized'", true, SExo24, "Stylized (Exo2+IBM)")
             N5Button(FSBX+Padding,FSBY+Padding+YSpacing*4,FSBW-Padding*2,BoxHeight, false, "Settings.FontSelected='OpenDyslexic'", true, SOD24, "Open Dyslexic")
-            --dark mode
-            local DMTX,DMTY,DMTW,DMTH=N5BoxWithTitle(744,436,411,79,true,"Dark Mode?","",true)
-            Settings.DarkMode=N5TickBox(DMTX,DMTY,DMTW,DMTH, false, Settings.DarkMode)
+            --
+            --Note Interval
+            local AVTX,AVTY,AVTW,AVTH=N5BoxWithTitle(744,308,411,79,true,"Note Interval","",true)
+            Settings.NoteSpeedRaw,Settings.NoteSpeedPercent=N5Slider(AVTX,AVTY,AVTW,AVTH, false, Settings.NoteSpeedRaw,Settings.NoteSpeedPercent)
+            local Selected = isMouseOverBox(AVTX, AVTY, AVTW, AVTH)
+            print(Settings.NoteSpeedPercent*5)
+            love.graphics.setColor(0,0,0)
+            CenterText(0,scaling(-150,810,Settings.YRes),string.format("%.1f", Settings.NoteSpeedPercent * 5),MediumHeaderBold)
+            --TimerBox mode
+            local DMTX,DMTY,DMTW,DMTH=N5BoxWithTitle(744,436,411,79,true,"Timer Box?","",true)
+            Settings.TimerBox=N5TickBox(DMTX,DMTY,DMTW,DMTH, false, Settings.TimerBox)
             --antiflicker
             local RFTX,RFTY,RFTW,RFTH=N5BoxWithTitle(744,565,411,79,true,"Reduced Flicker?","",true)
             Settings.ReducedFlicker=N5TickBox(RFTX,RFTY,RFTW,RFTH, false, Settings.ReducedFlicker)
