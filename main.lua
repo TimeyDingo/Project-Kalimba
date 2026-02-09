@@ -59,7 +59,6 @@ function love.draw()
                 NoteTimer=0
                 DisplayedNote=RandomNote
             end
-            print(Settings.NoteSpeedPercent*5)
             --[[
                 E6 = -5
                 D6 = -4
@@ -124,7 +123,6 @@ function love.draw()
             local AVTX,AVTY,AVTW,AVTH=N5BoxWithTitle(744,308,411,79,true,"Note Interval","",true)
             Settings.NoteSpeedRaw,Settings.NoteSpeedPercent=N5Slider(AVTX,AVTY,AVTW,AVTH, false, Settings.NoteSpeedRaw,Settings.NoteSpeedPercent)
             local Selected = isMouseOverBox(AVTX, AVTY, AVTW, AVTH)
-            print(Settings.NoteSpeedPercent*5)
             love.graphics.setColor(0,0,0)
             CenterText(0,scaling(-150,810,Settings.YRes),string.format("%.1f", Settings.NoteSpeedPercent * 5),MediumHeaderBold)
             --TimerBox mode
